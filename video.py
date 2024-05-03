@@ -5,6 +5,7 @@ from json import loads
 from html import unescape
 from random import randint, choice
 from moviepy.editor import *
+from moviepy.audio.fx.volumex import volumex
 from moviepy.video.fx.resize import resize
 from tts import tts
 
@@ -53,9 +54,8 @@ def generate_video(background: str, music: str, font: str, questions: list[Quest
     
     intro_text = f"{n_questions} trivia questions i bet you can't answer"
     outro_text = 'How many did you get correct?'
-    
     tts(intro_text, 'en_us_006', 'temp/intro.mp3')
-    intro_audio = AudioFileClip('temp/intro.mp3').volumex(4)
+    intro_audio = volumex(AudioFileClip('temp/intro.mp3'), 2.0)
     intro_duration = intro_audio.duration
     intro_clip = (
         TextClip(
@@ -76,7 +76,7 @@ def generate_video(background: str, music: str, font: str, questions: list[Quest
     )
 
     tts(outro_text, 'en_us_006', 'temp/outro.mp3')
-    outro_audio = AudioFileClip('temp/outro.mp3').volumex(4)
+    outro_audio = volumex(AudioFileClip('temp/outro.mp3'), 2.0)
     outro_duration = outro_audio.duration
     outro_clip = (
         TextClip(
@@ -182,7 +182,7 @@ def generate_video(background: str, music: str, font: str, questions: list[Quest
 
         clips.append(answer)
         
-    song_clip = AudioFileClip(music).set_duration(i_duration * n_questions + intro_duration + outro_duration)
+    song_clip = volumex(AudioFileClip(music).set_duration(i_duration * n_questions + intro_duration + outro_duration), 0.7)
     
     background_clip = VideoFileClip(background)
     background_duration = background_clip.duration
@@ -216,6 +216,7 @@ def generate_video(background: str, music: str, font: str, questions: list[Quest
         temp_audiofile='temp/temp.mp3'
     )
     
+    # Clear temp file
     temp = glob.glob('./temp/*')
     for f in temp:
         os.remove(f)
