@@ -164,3 +164,4 @@ cython_debug/
 
 # Generated files
 out/*
+temp/*
