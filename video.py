@@ -12,6 +12,7 @@ from tts import tts
 BACKGROUND_FILE_NAME = './assets/backgrounds/{}.mp4'.format(choice(['bg_minecraft']))
 MUSIC_FILE_NAME = './assets/songs/{}.mp3'.format(choice(['bg_phonk']))
 FONT_FILE_NAME = './assets/font.ttf'
+QN_COUNT = 5
 
 class Question:
     def __init__(self, title: str, options: list[str], answer: str):
@@ -221,4 +222,4 @@ def generate_video(background: str, music: str, font: str, questions: list[Quest
     for f in temp:
         os.remove(f)
 
-generate_video(BACKGROUND_FILE_NAME, MUSIC_FILE_NAME, FONT_FILE_NAME, get_question(1))
+generate_video(BACKGROUND_FILE_NAME, MUSIC_FILE_NAME, FONT_FILE_NAME, get_question(QN_COUNT))
