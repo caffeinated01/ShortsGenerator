@@ -39,32 +39,35 @@ def get_question(number: int):
     return questions
 
 class TriviaShort:
-    def __init__(self, background: str, music: str, font: str, n_questions, output: str, job_id: str):
+    def __init__(self, background: str, music: str, font: str, n_questions, output: str, job_id: str, iteration: int):
         self.background = background
         self.music = music
         self.font = font
         self.questions: list[Question] = get_question(n_questions)
         self.output = output
         self.job_id = job_id
-        self.thread = None
+        self.iteration = iteration
         self.running = True
+        self.thread = None
 
     def generate_video(self):
         n_questions = len(self.questions)
 
         # Length of each part of video
         question_duration = 9
-        reveal_duration = 3
+        reveal_duration = 2
         # Length of each question
         i_duration = question_duration + reveal_duration
         
         clips = []
         
+        os.mkdir(f'temp/{self.iteration}')
+
         # Generate intro and outro text clips
         intro_text = f"{n_questions} trivia questions i bet you can't answer"
         outro_text = 'How many did you get correct?'
-        tts(intro_text, 'en_us_006', 'temp/intro.mp3')
-        intro_audio = volumex(AudioFileClip('temp/intro.mp3'), 2.0)
+        tts(intro_text, 'en_us_006', f'temp/{self.iteration}/intro.mp3')
+        intro_audio = volumex(AudioFileClip(f'temp/{self.iteration}/intro.mp3'), 2.0)
         intro_duration = intro_audio.duration
         intro_clip = (
             TextClip(
@@ -84,8 +87,8 @@ class TriviaShort:
             .set_position(('center', 'center'), relative=True)
         )
 
-        tts(outro_text, 'en_us_006', 'temp/outro.mp3')
-        outro_audio = volumex(AudioFileClip('temp/outro.mp3'), 2.0)
+        tts(outro_text, 'en_us_006', f'temp/{self.iteration}/outro.mp3')
+        outro_audio = volumex(AudioFileClip(f'temp/{self.iteration}/outro.mp3'), 2.0)
         outro_duration = outro_audio.duration
         outro_clip = (
             TextClip(
@@ -210,12 +213,14 @@ class TriviaShort:
             clips=[background_clip, intro_clip, *clips, outro_clip] # Unpack clips because CompositeVideoClip does not accept nested list
             ,
             size=(1080,1920)
-        )
-        
+        )   
+
+        print(f"File 'out/{self.job_id}/{self.output}.mp4' has started generating.")
+
         result.write_videofile(
             f'out/{self.job_id}/{self.output}.mp4',
-            verbose= False,
-            # logger = None,
+            # verbose= False,
+            logger = None,
             fps=24,
             bitrate=None,
             audio=True,
@@ -224,14 +229,9 @@ class TriviaShort:
             audio_nbytes=4,
             audio_bitrate=None,
             audio_bufsize=2000,
-            temp_audiofile='temp/temp.mp3'
+            temp_audiofile=f'temp/{self.iteration}/temp.mp3'
         )
-        
-        # Clear temp files
-        temp = glob.glob('./temp/*')
-        for f in temp:
-            os.remove(f)
     
     def start_thread(self):
         self.thread = threading.Thread(target=self.generate_video)
-        self.thread.start()
+        self.thread.start()    

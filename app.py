@@ -1,6 +1,9 @@
+import glob
 import os
 from platform import system
 from random import choice
+import shutil
+from threading import Semaphore
 from datetime import datetime
 import time
 from trivia import TriviaShort
@@ -28,23 +31,23 @@ def generate_trivia():
     
     n_videos = int(input('How many videos: '))
     n_questions_per_video = int(input('How many questions per video: '))
+    n_threads = int(input('How many thread to dedicate (recommended ~5): '))
 
     job_id = generate_job_id()
+
+    semaphore = Semaphore(n_threads)
 
     # Generate directory for video output
     os.makedirs(f'./out/{job_id}')
 
     for i in range(n_videos):
         clear_screen()
-        short = TriviaShort(BACKGROUND_FILE_NAME, MUSIC_FILE_NAME, FONT_FILE_NAME, n_questions_per_video, 'trivia_' + str(i+1), job_id)
-        short.start_thread()
-
-        # Uncomment for multithreading (make this an option later)
-        if short.running:
-            short.thread.join()
-
-        print(f'{i+1}/{n_videos} done!')
-        time.sleep(1)
+        # Multithreading
+        with semaphore:
+            short = TriviaShort(BACKGROUND_FILE_NAME, MUSIC_FILE_NAME, FONT_FILE_NAME, n_questions_per_video, 'trivia_' + str(i+1), job_id, i+1)
+            short.start_thread()
+            # Delay so can fetch questions
+            time.sleep(10)
 
 def main():
     clear_screen()
@@ -65,6 +68,12 @@ A Shorts Automation CLI
         '1': generate_trivia
     }
 
+    if not os.path.exists('./out'):
+       os.mkdir('./out')
+    
+    if not os.path.exists('./temp'):
+       os.mkdir('./temp')
+
     c = None
     while c == None:
         c_text = '\n'.join([f'[{i}] '+choices[i] for i in choices.keys()])
@@ -75,7 +84,13 @@ A Shorts Automation CLI
             continue
         c = choice
     clear_screen()
+
     choice_to_fn[c]()
+
+    # Clear temp files
+    for f in os.listdir('./temp/'):
+        path = os.path.join('./temp/', f)
+        shutil.rmtree(path)
 
 if __name__ == "__main__":
     main()
