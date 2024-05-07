@@ -39,7 +39,7 @@ def get_question(number: int):
     return questions
 
 class TriviaShort:
-    def __init__(self, background: str, music: str, font: str, n_questions, output: str, job_id: str, iteration: int):
+    def __init__(self, background: str, music: str, font: str, n_questions: int, output: str, job_id: str, iteration: int):
         self.background = background
         self.music = music
         self.font = font
@@ -51,6 +51,9 @@ class TriviaShort:
         self.thread = None
 
     def generate_video(self):
+        if not os.path.exists(f'temp/{self.iteration}'):
+            os.mkdir(f'temp/{self.iteration}')
+        
         n_questions = len(self.questions)
 
         # Length of each part of video
@@ -60,8 +63,6 @@ class TriviaShort:
         i_duration = question_duration + reveal_duration
         
         clips = []
-        
-        os.mkdir(f'temp/{self.iteration}')
 
         # Generate intro and outro text clips
         intro_text = f"{n_questions} trivia questions i bet you can't answer"
@@ -234,4 +235,4 @@ class TriviaShort:
     
     def start_thread(self):
         self.thread = threading.Thread(target=self.generate_video)
-        self.thread.start()    
+        self.thread.start()

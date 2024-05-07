@@ -1,2 +1,7 @@
 moviepy
 Pillow==9.5.0
+praw
+python-dotenv
+selenium
+chromedriver-py
+webdriver-manager

@@ -6,6 +6,7 @@ import shutil
 from threading import Semaphore
 from datetime import datetime
 import time
+from reddit import RedditShort
 from trivia import TriviaShort
 
 BACKGROUND_FILE_NAME = './assets/backgrounds/{}.mp4'.format(choice(['bg_minecraft']))
@@ -25,29 +26,74 @@ def clear_screen():
   elif os_name in ('Linux', 'Darwin'):
     os.system('clear')
 
-# Trivia function
+# Generate Trivia
 def generate_trivia():
     print('Specify what to automate...')
     
     n_videos = int(input('How many videos: '))
     n_questions_per_video = int(input('How many questions per video: '))
-    n_threads = int(input('How many thread to dedicate (recommended ~5): '))
+    n_threads = input("How many thread to dedicate (recommended ~5), 'n' to disable multithreading: ")
 
     job_id = generate_job_id()
-
-    semaphore = Semaphore(n_threads)
 
     # Generate directory for video output
     os.makedirs(f'./out/{job_id}')
 
-    for i in range(n_videos):
-        clear_screen()
-        # Multithreading
-        with semaphore:
+    if n_threads.lower() == 'n':
+        for i in range(n_videos):
+            clear_screen()
             short = TriviaShort(BACKGROUND_FILE_NAME, MUSIC_FILE_NAME, FONT_FILE_NAME, n_questions_per_video, 'trivia_' + str(i+1), job_id, i+1)
             short.start_thread()
-            # Delay so can fetch questions
-            time.sleep(10)
+
+            if short.running:
+                short.thread.join()
+
+    else:
+        semaphore = Semaphore(int(n_threads))
+
+        for i in range(n_videos):
+            clear_screen()
+            # Multithreading
+            with semaphore:
+                short = TriviaShort(BACKGROUND_FILE_NAME, MUSIC_FILE_NAME, FONT_FILE_NAME, n_questions_per_video, 'trivia_' + str(i+1), job_id, i+1)
+                short.start_thread()
+                # Delay so can fetch questions
+                time.sleep(10)
+
+# Generate Reddit
+def generate_reddit():
+    print('Specify what to automate...')
+    
+    n_videos = int(input('How many videos: '))
+    n_comments_per_video = int(input('How many comments per video: '))
+    subreddit = input('What subreddit to find post from: r/')
+    n_threads = input("How many thread to dedicate (recommended ~5), 'n' to disable multithreading: ")
+
+    job_id = generate_job_id()
+
+    # Generate directory for video output
+    os.makedirs(f'./out/{job_id}')
+
+    if n_threads.lower() == 'n':
+        for i in range(n_videos):
+            clear_screen()
+            short = RedditShort(BACKGROUND_FILE_NAME, MUSIC_FILE_NAME, FONT_FILE_NAME, subreddit, n_comments_per_video, 'reddit_' + str(i+1), job_id, i+1)
+            short.start_thread()
+
+            if short.running:
+                short.thread.join()
+
+    else:
+        semaphore = Semaphore(int(n_threads))
+
+        for i in range(n_videos):
+            clear_screen()
+            # Multithreading
+            with semaphore:
+                short = RedditShort(BACKGROUND_FILE_NAME, MUSIC_FILE_NAME, FONT_FILE_NAME, subreddit, n_comments_per_video, 'reddit_' + str(i+1), job_id, i+1)
+                short.start_thread()
+                
+                time.sleep(10)
 
 def main():
     clear_screen()
@@ -61,11 +107,12 @@ A Shorts Automation CLI
           ''')
     choices = {
         '1': 'Trivia Short',
-        '2': '?? (Coming soon)'
+        '2': 'Reddit Short'
     }
 
     choice_to_fn = {
-        '1': generate_trivia
+        '1': generate_trivia,
+        '2': generate_reddit,
     }
 
     if not os.path.exists('./out'):
@@ -87,10 +134,8 @@ A Shorts Automation CLI
 
     choice_to_fn[c]()
 
-    # Clear temp files
-    for f in os.listdir('./temp/'):
-        path = os.path.join('./temp/', f)
-        shutil.rmtree(path)
+    # Clear temp folder
+    shutil.rmtree('temp/')
 
 if __name__ == "__main__":
     main()
