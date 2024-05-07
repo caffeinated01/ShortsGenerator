@@ -220,7 +220,7 @@ class TriviaShort:
 
         result.write_videofile(
             f'out/{self.job_id}/{self.output}.mp4',
-            # verbose= False,
+            verbose= False,
             logger = None,
             fps=24,
             bitrate=None,

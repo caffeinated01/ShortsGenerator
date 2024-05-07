@@ -24,7 +24,9 @@ pip install -r requirements.txt
 
 4. and **install ImageMagick** from the [official website](https://imagemagick.org/script/download.php) **OR** use a package manager to do so
 
-5. Setup your reddit app at https://reddit.com/prefs/apps
+5. Make sure you have x264 and ffmpeg packages 
+
+6. Setup your reddit app at https://reddit.com/prefs/apps
 
    1. Select Are you a developer? Create an app, or Create another app.
    2. Set up your application.
@@ -35,7 +37,7 @@ pip install -r requirements.txt
       5. Complete the catcha
    3. Now, copy your Client ID (string of text found under the words 'personal use script' and the name of your app) and Client Secret (found under the 'secret' field)
 
-6. When you run the code for the first time, a file called '.env' will show up. If you cannot see the file, enable your file explorer to show hidden files. Fill up the two fields with your Client ID and Client Secret you copied earlier.
+7. When you run the code for the first time, a file called '.env' will show up. If you cannot see the file, enable your file explorer to show hidden files. Fill up the two fields with your Client ID and Client Secret you copied earlier.
 
 # Running 🚀
 

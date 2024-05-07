@@ -96,7 +96,7 @@ def screenshot_comments(driver, post: Post):
     comments = post.comments
 
     for c in comments:
-        comment = WebDriverWait(driver, 200).until(EC.presence_of_element_located((By.CSS_SELECTOR, f'#comment-tree > shreddit-comment:nth-child({c.idx})')))
+        comment = WebDriverWait(driver, 300).until(EC.presence_of_element_located((By.CSS_SELECTOR, f'#comment-tree > shreddit-comment:nth-child({c.idx})')))
         
         while True:
             actions = ActionChains(driver)
