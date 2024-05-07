@@ -232,8 +232,3 @@ class RedditShort:
     def start_thread(self):
         self.thread = threading.Thread(target=self.generate_video)
         self.thread.start()
-
-BACKGROUND_FILE_NAME = './assets/backgrounds/{}.mp4'.format(random.choice(['bg_minecraft']))
-MUSIC_FILE_NAME = './assets/songs/{}.mp3'.format(random.choice(['bg_phonk']))
-FONT_FILE_NAME = './assets/font.ttf'
-
