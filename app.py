@@ -121,6 +121,12 @@ A Shorts Automation CLI
     if not os.path.exists('./temp'):
        os.mkdir('./temp')
 
+    if not os.path.isfile('.env'):
+        env = open('.env', 'w')
+        env.write('''REDDIT_CLIENT_ID = 
+REDDIT_CLIENT_SECRET = 
+''')
+
     c = None
     while c == None:
         c_text = '\n'.join([f'[{i}] '+choices[i] for i in choices.keys()])

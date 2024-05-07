@@ -110,8 +110,8 @@ def screenshot_comments(driver, post: Post):
 
 def initialise_all(subreddit, n_comments):
     reddit = praw.Reddit(
-        client_id=os.getenv('CLIENT_ID'),
-        client_secret=os.getenv('CLIENT_SECRET'),
+        client_id=os.getenv('REDDIT_CLIENT_ID'),
+        client_secret=os.getenv('REDDIT_CLIENT_SECRET'),
         user_agent="script by u/caffeinated01",
     )  
 
