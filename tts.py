@@ -3,7 +3,10 @@
 # topic: TikTok-Voice-TTS
 # version: 1.2
 
-import requests, base64, re, sys
+import requests
+import base64
+import re
+import sys
 from threading import Thread
 
 # define the endpoint data with URLs and corresponding response keys
@@ -75,15 +78,17 @@ VOICES = [
 ]
 
 # define the text-to-speech function
+
+
 def tts(text: str, voice: str, output_filename: str = "output.mp3") -> None:
     # specified voice is valid
     if not voice in VOICES:
         raise ValueError("voice must be valid")
-    
+
     # text is not empty
     if not text:
         raise ValueError("text must not be 'None'")
-    
+
     # split the text into chunks
     chunks: list[str] = _split_text(text)
 
@@ -97,12 +102,13 @@ def tts(text: str, voice: str, output_filename: str = "output.mp3") -> None:
         def generate_audio_chunk(index: int, chunk: str) -> None:
             nonlocal endpoint_valid
 
-            if not endpoint_valid: return
+            if not endpoint_valid:
+                return
 
             try:
                 # request to the endpoint to generate audio for the chunk
                 response = requests.post(
-                    entry["url"], 
+                    entry["url"],
                     json={
                         "text": chunk,
                         "voice": voice
@@ -122,15 +128,17 @@ def tts(text: str, voice: str, output_filename: str = "output.mp3") -> None:
         # start threads for generating audio for each chunk
         threads: list[Thread] = []
         for index, chunk in enumerate(chunks):
-            thread: Thread = Thread(target=generate_audio_chunk, args=(index, chunk))
+            thread: Thread = Thread(
+                target=generate_audio_chunk, args=(index, chunk))
             threads.append(thread)
             thread.start()
 
         # wait for all threads to finish
         for thread in threads:
             thread.join()
-        
-        if not endpoint_valid: continue
+
+        if not endpoint_valid:
+            continue
 
         # concatenate audio data from all chunks and decode from base64
         audio_bytes = base64.b64decode("".join(audio_data))
@@ -144,6 +152,8 @@ def tts(text: str, voice: str, output_filename: str = "output.mp3") -> None:
         break
 
 # define a function to split the text into chunks of maximum 300 characters or less
+
+
 def _split_text(text: str) -> list[str]:
     # empty list to store merged chunks
     merged_chunks: list[str] = []
@@ -156,11 +166,11 @@ def _split_text(text: str) -> list[str]:
     for i, chunk in enumerate(seperated_chunks):
         if len(chunk) > 300:
             # Split chunk further into smaller parts
-            seperated_chunks[i:i+1] = re.findall(r'.*?[ ]|.+', chunk) 
+            seperated_chunks[i:i+1] = re.findall(r'.*?[ ]|.+', chunk)
 
     # initialize an empty string to hold the merged chunk
     merged_chunk: str = ""
-    
+
     for seperated_chunk in seperated_chunks:
         # check if adding the current chunk would exceed the limit of 300 characters
         if len(merged_chunk) + len(seperated_chunk) <= 300:

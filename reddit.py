@@ -22,11 +22,13 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 load_dotenv()
 
+
 class Comment:
     def __init__(self, idx: int, body: str, id: str):
         self.idx = idx
         self.body = body
         self.id = id
+
 
 class Post:
     def __init__(self, id: str, link: str, title: str, body: str, comments: list[Comment]):
@@ -36,39 +38,49 @@ class Post:
         self.body = body
         self.comments = comments
 
+
 def get_posts(reddit: praw.Reddit, subreddit: str, n_comments: int):
 
-    submissions: list[praw.models.reddit.submission.Submission] = list(reddit.subreddit(subreddit).top(time_filter='day', limit=None))
+    submissions: list[praw.models.reddit.submission.Submission] = list(
+        reddit.subreddit(subreddit).top(time_filter='day', limit=400))
 
     post = None
-    
+
     while post == None:
         submission = random.choice(submissions)
-        
-        if submission.over_18:
-            continue
 
         if submission.over_18:
             continue
-    
+
+        c = 0
+
+        for comment in submission.comments.list():
+            if comment.parent_id[0:2] == 't1_':
+                continue
+            c += 1
+
+        if c < n_comments:
+            continue
+
         if len(submission.comments.list()) < n_comments:
             continue
-        
+
         post = submission
-    
+
     temp = get_details_from_post(post, n_comments)
-    
+
     post = temp
-    
+
     return post
-    
+
+
 def get_details_from_post(post: praw.models.reddit.submission.Submission, n_comments: int):
     id = post.id
     link = 'https://reddit.com' + post.permalink
     title = post.title
     body = post.selftext
     comments = []
-    
+
     post.comments.replace_more(limit=None)
 
     i = 1
@@ -77,7 +89,7 @@ def get_details_from_post(post: praw.models.reddit.submission.Submission, n_comm
 
         if comment.parent_id[0:2] == 't1_':
             continue
-        
+
         if (len(comment.body.split()) > 300):
             continue
 
@@ -87,17 +99,21 @@ def get_details_from_post(post: praw.models.reddit.submission.Submission, n_comm
 
     return Post(id, link, title, body, comments)
 
+
 def screenshot_title(driver, post: Post):
-    title = WebDriverWait(driver, 300).until(EC.presence_of_element_located((By.CSS_SELECTOR, f'#t3_{post.id}')))
+    title = WebDriverWait(driver, 300).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, f'#t3_{post.id}')))
     title.screenshot(f'{post.id}.png')
     shutil.move(f'{post.id}.png', f'./temp/{post.id}.png')
+
 
 def screenshot_comments(driver, post: Post):
     comments = post.comments
 
     for c in comments:
-        comment = WebDriverWait(driver, 300).until(EC.presence_of_element_located((By.CSS_SELECTOR, f'#comment-tree > shreddit-comment:nth-child({c.idx})')))
-        
+        comment = WebDriverWait(driver, 300).until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, f'#comment-tree > shreddit-comment:nth-child({c.idx})')))
+
         while True:
             actions = ActionChains(driver)
             actions.move_to_element(comment).perform()
@@ -108,17 +124,20 @@ def screenshot_comments(driver, post: Post):
 
         shutil.move(f'{post.id}_{c.id}.png', f'./temp/{post.id}_{c.id}.png')
 
-def initialise_all(subreddit, n_comments):
-    reddit = praw.Reddit(
-        client_id=os.getenv('REDDIT_CLIENT_ID'),
-        client_secret=os.getenv('REDDIT_CLIENT_SECRET'),
-        user_agent="script by u/caffeinated01",
-    )  
+
+def initialise_all(client_id, client_secret, subreddit, n_comments):
+    try:
+        reddit = praw.Reddit(
+            client_id=client_id,
+            client_secret=client_secret,
+            user_agent="script by u/caffeinated01",
+        )
+    except:
+        print('An error occured while logging in, check that your credentials are right')
 
     post = get_posts(reddit, subreddit=subreddit, n_comments=n_comments)
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-
 
     driver.get(post.link)
     screenshot_title(driver, post)
@@ -127,12 +146,14 @@ def initialise_all(subreddit, n_comments):
 
     return post
 
+
 class RedditShort:
-    def __init__(self, background: str, music: str, font: str, subreddit: str, n_comments: int, output: str, job_id: str, iteration: int):
+    def __init__(self, client_id: str, client_secret: str, background: str, music: str, font: str, subreddit: str, n_comments: int, output: str, job_id: str, iteration: int):
         self.background = background
         self.music = music
         self.font = font
-        self.post: Post = initialise_all(subreddit, n_comments)
+        self.post: Post = initialise_all(
+            client_id, client_secret, subreddit, n_comments)
         self.output = output
         self.job_id = job_id
         self.iteration = iteration
@@ -153,29 +174,31 @@ class RedditShort:
         # Generate intro and outro text clips
         intro_text = self.post.title
 
-
         tts(intro_text, 'en_us_006', f'temp/{self.iteration}/intro.mp3')
-        intro_audio = volumex(AudioFileClip(f'temp/{self.iteration}/intro.mp3'), 3.0)
+        intro_audio = volumex(AudioFileClip(
+            f'temp/{self.iteration}/intro.mp3'), 3.0)
         intro_duration = intro_audio.duration
         intro_clip = resize(
             (ImageClip(
                 path_to_title_screenshot
             )
-            .set_audio(intro_audio)
-            .margin(left=40, right=40, opacity=0)
-            .set_start(0)
-            .set_duration(intro_duration)
-            .set_position(('center', 'center'), relative=True)),
+                .set_audio(intro_audio)
+                .margin(left=40, right=40, opacity=0)
+                .set_start(0)
+                .set_duration(intro_duration)
+                .set_position(('center', 'center'), relative=True)),
             1.7
         )
 
-        duration+=intro_duration
+        duration += intro_duration
 
         for comment in self.post.comments:
             path_to_comment_screenshot = f'temp/{post_id}_{comment.id}.png'
 
-            tts(comment.body, 'en_us_006', f'temp/{self.iteration}/{post_id}_{comment.id}.mp3')
-            comment_audio = volumex(AudioFileClip(f'temp/{self.iteration}/{post_id}_{comment.id}.mp3'), 3.0)
+            tts(comment.body, 'en_us_006',
+                f'temp/{self.iteration}/{post_id}_{comment.id}.mp3')
+            comment_audio = volumex(AudioFileClip(
+                f'temp/{self.iteration}/{post_id}_{comment.id}.mp3'), 3.0)
             comment_duration = comment_audio.duration
             comment_clip = resize(
                 (ImageClip(
@@ -190,34 +213,36 @@ class RedditShort:
             )
             clips.append(comment_clip)
 
-            duration+=comment_duration
-            
-        
-        song_clip = volumex(AudioFileClip(self.music).set_duration(duration), 0.3)
-        
+            duration += comment_duration
+
+        song_clip = volumex(AudioFileClip(
+            self.music).set_duration(duration), 0.3)
+
         background_clip = VideoFileClip(self.background)
         background_duration = background_clip.duration
         # Get a random part of background video, make sure background clip is in correct resolution
         background_clip = resize(
             (
-                background_clip.cutout(0, random.randint(1, round(background_duration - (duration)))).set_duration(duration).set_position('center','center')
+                background_clip.cutout(0, random.randint(1, round(
+                    background_duration - (duration)))).set_duration(duration).set_position('center', 'center')
             ),
             height=1920,
         ).set_audio(song_clip)
 
         # Combine all components & render final video
         result = CompositeVideoClip(
-            clips=[background_clip, intro_clip, *clips] # Unpack clips because CompositeVideoClip does not accept nested list
-            ,
-            size=(1080,1920)
-        )   
+            # Unpack clips because CompositeVideoClip does not accept nested list
+            clips=[background_clip, intro_clip, *clips],
+            size=(1080, 1920)
+        )
 
-        print(f"File 'out/{self.job_id}/{self.output}.mp4' has started generating.")
+        print(
+            f"File 'out/{self.job_id}/{self.output}.mp4' has started generating.")
 
         result.write_videofile(
             f'out/{self.job_id}/{self.output}.mp4',
-            verbose= False,
-            logger = None,
+            verbose=False,
+            logger=None,
             fps=24,
             bitrate=None,
             audio=True,
@@ -230,7 +255,6 @@ class RedditShort:
         )
 
         result.save_frame(f'out/{self.job_id}/{self.output}.png', t=1)
-
 
     def start_thread(self):
         self.thread = threading.Thread(target=self.generate_video)
