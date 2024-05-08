@@ -6,6 +6,8 @@ import shutil
 from threading import Semaphore
 from datetime import datetime
 import time
+from instagrapi import Client
+import getpass
 from reddit import RedditShort
 from trivia import TriviaShort
 
@@ -27,14 +29,12 @@ def clear_screen():
     os.system('clear')
 
 # Generate Trivia
-def generate_trivia():
+def generate_trivia(job_id):
     print('Specify what to automate...')
     
     n_videos = int(input('How many videos: '))
     n_questions_per_video = int(input('How many questions per video: '))
     n_threads = input("How many thread to dedicate (recommended ~5), 'n' to disable multithreading: ")
-
-    job_id = generate_job_id()
 
     # Generate directory for video output
     os.makedirs(f'./out/{job_id}')
@@ -61,15 +61,13 @@ def generate_trivia():
                 time.sleep(10)
 
 # Generate Reddit
-def generate_reddit():
+def generate_reddit(job_id):
     print('Specify what to automate...')
     
     n_videos = int(input('How many videos: '))
     n_comments_per_video = int(input('How many comments per video: '))
     subreddit = input('What subreddit to find post from: r/')
     n_threads = input("How many thread to dedicate (recommended ~5), 'n' to disable multithreading: ")
-
-    job_id = generate_job_id()
 
     # Generate directory for video output
     os.makedirs(f'./out/{job_id}')
@@ -95,6 +93,31 @@ def generate_reddit():
                 
                 time.sleep(10)
 
+def upload_to_ig(job_id, caption='Follow for more 🤪 #reddit #askreddit #showerthoughts #trivia #didyouknow #reels #foryoupage'):
+    cl = Client()
+    
+    while True:
+        user = input('Instagram username: ')
+        pw = getpass.getpass(prompt='Instagram password: ')
+        try:
+            cl.login(user, pw)
+            break
+        except Exception as e:
+            print(e)
+            print('There was an error...Check that your credentials are right')
+
+
+    dir = f'out/{job_id}'
+
+    for f in os.listdir(dir):
+        media = cl.clip_upload(path=f'out/{job_id}/{f}', caption=caption, extra_data={
+            'like_and_view_counts_disabled': 1
+        })
+
+        print(media.model_dump())
+
+upload_to_ig('job_20240507_213946')
+
 def main():
     clear_screen()
     print('''
@@ -107,7 +130,7 @@ A Shorts Automation CLI
           ''')
     choices = {
         '1': 'Trivia Short',
-        '2': 'Reddit Short'
+        '2': 'Reddit Short',
     }
 
     choice_to_fn = {
@@ -138,10 +161,24 @@ REDDIT_CLIENT_SECRET =
         c = choice
     clear_screen()
 
-    choice_to_fn[c]()
+    job_id = generate_job_id()
+
+    choice_to_fn[c](job_id)
+
+
+    while True:
+        upload_choice = input('Upload to instagram [y/n]: ')
+        match upload_choice:
+            case 'y':
+                upload_to_ig()
+                break
+            case 'n':
+                break
+            case '_':
+                continue
 
     # Clear temp folder
     shutil.rmtree('temp/')
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

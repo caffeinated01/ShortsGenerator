@@ -78,7 +78,7 @@ def get_details_from_post(post: praw.models.reddit.submission.Submission, n_comm
         if comment.parent_id[0:2] == 't1_':
             continue
         
-        if (len(comment.body.split()) > 100):
+        if (len(comment.body.split()) > 300):
             continue
 
         comments.append(Comment(i, comment.body, comment.id))
@@ -88,7 +88,7 @@ def get_details_from_post(post: praw.models.reddit.submission.Submission, n_comm
     return Post(id, link, title, body, comments)
 
 def screenshot_title(driver, post: Post):
-    title = WebDriverWait(driver, 100).until(EC.presence_of_element_located((By.CSS_SELECTOR, f'#t3_{post.id}')))
+    title = WebDriverWait(driver, 300).until(EC.presence_of_element_located((By.CSS_SELECTOR, f'#t3_{post.id}')))
     title.screenshot(f'{post.id}.png')
     shutil.move(f'{post.id}.png', f'./temp/{post.id}.png')
 
