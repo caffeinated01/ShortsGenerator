@@ -232,4 +232,3 @@ class RedditShort:
     def start_thread(self):
         self.thread = threading.Thread(target=self.generate_video)
         self.thread.start()
-
