@@ -30,11 +30,9 @@ def clear_screen():
 
 # Generate Trivia
 def generate_trivia(job_id):
-    print('Specify what to automate...')
-    
-    n_videos = int(input('How many videos: '))
-    n_questions_per_video = int(input('How many questions per video: '))
-    n_threads = input("How many thread to dedicate (recommended ~5), 'n' to disable multithreading: ")
+    n_videos = int(input('> How many videos: '))
+    n_questions_per_video = int(input('> How many questions per video: '))
+    n_threads = input("> How many thread to dedicate (recommended ~5), 'n' to disable multithreading: ")
 
     # Generate directory for video output
     os.makedirs(f'./out/{job_id}')
@@ -61,13 +59,11 @@ def generate_trivia(job_id):
                 time.sleep(10)
 
 # Generate Reddit
-def generate_reddit(job_id):
-    print('Specify what to automate...')
-    
-    n_videos = int(input('How many videos: '))
-    n_comments_per_video = int(input('How many comments per video: '))
-    subreddit = input('What subreddit to find post from: r/')
-    n_threads = input("How many thread to dedicate (recommended ~5), 'n' to disable multithreading: ")
+def generate_reddit(job_id):    
+    n_videos = int(input('> How many videos: '))
+    n_comments_per_video = int(input('> How many comments per video: '))
+    subreddit = input('> What subreddit to find post from: r/')
+    n_threads = input("> How many thread to dedicate (recommended ~5), 'n' to disable multithreading: ")
 
     # Generate directory for video output
     os.makedirs(f'./out/{job_id}')
@@ -93,11 +89,16 @@ def generate_reddit(job_id):
                 
                 time.sleep(10)
 
-def upload_to_ig(job_id, caption='Follow for more 🤪 #reddit #askreddit #showerthoughts #trivia #didyouknow #reels #foryoupage'):
+def upload_to_ig(job_id):
     cl = Client()
-    
+
+    emojis = ['🤣', '😂', '😹', '🫵', '🙃', '🤔', '🤪', '👀']
+
+    c = input('> Enter a caption (skip for default): ')
+    caption = f'Follow for more {choice(emojis)} #reddit #askreddit #showerthoughts #trivia #didyouknow #reels #foryoupage' if c == '' else c
+
     while True:
-        user = input('Instagram username: ')
+        user = input('> Instagram username: ')
         pw = getpass.getpass(prompt='Instagram password: ')
         try:
             cl.login(user, pw)
@@ -110,13 +111,10 @@ def upload_to_ig(job_id, caption='Follow for more 🤪 #reddit #askreddit #showe
     dir = f'out/{job_id}'
 
     for f in os.listdir(dir):
-        media = cl.clip_upload(path=f'out/{job_id}/{f}', caption=caption, extra_data={
+        cl.clip_upload(path=f'out/{job_id}/{f}', caption=caption, extra_data={
             'like_and_view_counts_disabled': 1
         })
-
-        print(media.model_dump())
-
-upload_to_ig('job_20240507_213946')
+        print('Sucess!')
 
 def main():
     clear_screen()
@@ -154,7 +152,7 @@ REDDIT_CLIENT_SECRET =
     while c == None:
         c_text = '\n'.join([f'[{i}] '+choices[i] for i in choices.keys()])
         print(f'Options\n{c_text}')
-        choice = input('What to generate: ')
+        choice = input('> What to generate: ')
         if choice not in choices.keys():
             print(f'{choice} is not a valid choice!\n')
             continue
@@ -167,7 +165,7 @@ REDDIT_CLIENT_SECRET =
 
 
     while True:
-        upload_choice = input('Upload to instagram [y/n]: ')
+        upload_choice = input('> Upload to instagram [y/n]: ')
         match upload_choice:
             case 'y':
                 upload_to_ig()
@@ -180,5 +178,5 @@ REDDIT_CLIENT_SECRET =
     # Clear temp folder
     shutil.rmtree('temp/')
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
