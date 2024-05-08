@@ -229,6 +229,9 @@ class RedditShort:
             temp_audiofile=f'temp/{self.iteration}/temp.mp3'
         )
 
+        result.save_frame(f'out/{self.job_id}/{self.output}.png', t=1)
+
+
     def start_thread(self):
         self.thread = threading.Thread(target=self.generate_video)
         self.thread.start()

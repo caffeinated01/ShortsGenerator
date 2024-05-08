@@ -94,12 +94,12 @@ def upload_to_ig(job_id):
 
     emojis = ['🤣', '😂', '😹', '🫵', '🙃', '🤔', '🤪', '👀']
 
-    c = input('> Enter a caption (skip for default): ')
-    caption = f'Follow for more {choice(emojis)} #reddit #askreddit #showerthoughts #trivia #didyouknow #reels #foryoupage' if c == '' else c
+    c = input('> Enter a caption (skip for default) [You can add hashtags like #YourHashTag]: ')
+    caption = f'Follow for more {choice(emojis)} #reddit #redditstory #askreddit #showerthoughts #trivia #shorts #cool #story #reels #didyouknow #foryoupage' if c == '' else c
 
     while True:
         user = input('> Instagram username: ')
-        pw = getpass.getpass(prompt='Instagram password: ')
+        pw = getpass.getpass(prompt='> Instagram password: ')
         try:
             cl.login(user, pw)
             break
@@ -111,10 +111,11 @@ def upload_to_ig(job_id):
     dir = f'out/{job_id}'
 
     for f in os.listdir(dir):
-        cl.clip_upload(path=f'out/{job_id}/{f}', caption=caption, extra_data={
-            'like_and_view_counts_disabled': 1
-        })
-        print('Sucess!')
+        if f.endswith('.mp4'):
+            cl.clip_upload(path=f'out/{job_id}/{f}', caption=caption, thumbnail=f'out/{job_id}/{f[:-3]}png', extra_data={
+                'like_and_view_counts_disabled': 1
+            })
+            print('Sucess!')
 
 def main():
     clear_screen()
@@ -163,12 +164,11 @@ REDDIT_CLIENT_SECRET =
 
     choice_to_fn[c](job_id)
 
-
     while True:
         upload_choice = input('> Upload to instagram [y/n]: ')
         match upload_choice:
             case 'y':
-                upload_to_ig()
+                upload_to_ig(job_id)
                 break
             case 'n':
                 break
