@@ -102,7 +102,6 @@ def generate_reddit(job_id):
             with open('reddit_generated_before.txt', 'r') as f:
                 l = f.readlines()
             existing = [i.strip() for i in l]
-            print(existing)
         case '_':
             existing = []
 
