@@ -42,7 +42,7 @@ class Post:
 def get_posts(reddit: praw.Reddit, subreddit: str, n_comments: int):
 
     submissions: list[praw.models.reddit.submission.Submission] = list(
-        reddit.subreddit(subreddit).top(time_filter='day', limit=400))
+        reddit.subreddit(subreddit).top(time_filter='day', limit=None))
 
     post = None
 
@@ -55,7 +55,7 @@ def get_posts(reddit: praw.Reddit, subreddit: str, n_comments: int):
         c = 0
 
         for comment in submission.comments.list():
-            if comment.parent_id[0:2] == 't1_':
+            if comment.parent_id[0:2] == 't1':
                 continue
             c += 1
 
@@ -87,7 +87,7 @@ def get_details_from_post(post: praw.models.reddit.submission.Submission, n_comm
     for comment in post.comments.list():
         i += 1
 
-        if comment.parent_id[0:2] == 't1_':
+        if comment.parent_id[0:2] == 't1':
             continue
 
         if (len(comment.body.split()) > 300):
@@ -101,7 +101,7 @@ def get_details_from_post(post: praw.models.reddit.submission.Submission, n_comm
 
 
 def screenshot_title(driver, post: Post):
-    title = WebDriverWait(driver, 300).until(
+    title = WebDriverWait(driver, 60).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, f'#t3_{post.id}')))
     title.screenshot(f'{post.id}.png')
     shutil.move(f'{post.id}.png', f'./temp/{post.id}.png')
@@ -111,13 +111,25 @@ def screenshot_comments(driver, post: Post):
     comments = post.comments
 
     for c in comments:
-        comment = WebDriverWait(driver, 300).until(EC.presence_of_element_located(
+        comment = WebDriverWait(driver, 60).until(EC.presence_of_element_located(
             (By.CSS_SELECTOR, f'#comment-tree > shreddit-comment:nth-child({c.idx})')))
+
+        collapsed_attribute = comment.get_attribute("collapsed")
+
+        if collapsed_attribute:
+            driver.execute_script(
+                "arguments[0].removeAttribute('collapsed');", comment)
+
+        main_comment = WebDriverWait(driver, 60).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, f'#t1_{c.id}-comment-rtjson-content')))
 
         while True:
             actions = ActionChains(driver)
-            actions.move_to_element(comment).perform()
+            actions.scroll_to_element(main_comment).perform()
+            # Since the previous line only scrolls to the end of the comment body, we want to scroll 32px, which is the height of the upvote bar, to take a full screenshot of the comment
+            driver.execute_script("window.scrollBy(0, 32);")
             time.sleep(1)
+
             if comment.is_displayed:
                 comment.screenshot(f'{post.id}_{c.id}.png')
                 break
@@ -130,7 +142,7 @@ def initialise_all(client_id, client_secret, subreddit, n_comments):
         reddit = praw.Reddit(
             client_id=client_id,
             client_secret=client_secret,
-            user_agent="script by u/caffeinated01",
+            user_agent='script by u/caffeinated01',
         )
     except:
         print('An error occured while logging in, check that your credentials are right')

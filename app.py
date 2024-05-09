@@ -174,8 +174,12 @@ def upload_to_ig(job_id):
                 'An error occured while logging in, check that your credentials are right')
 
     while True:
-        store_credentials = input(
-            'Do you want to store/overwrite current credentials in config file [y/n]: ')
+        store_credentials = 'n'
+
+        if using_stored == False:
+            store_credentials = input(
+                'Do you want to store/overwrite current credentials in config file [y/n]: ')
+
         match store_credentials.lower():
             case 'y':
                 set_key(dotenv_path='.env',
