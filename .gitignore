@@ -165,3 +165,4 @@ cython_debug/
 # Generated files
 out/*
 temp/*
+reddit_generated_before.txt

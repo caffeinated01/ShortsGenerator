@@ -39,7 +39,7 @@ class Post:
         self.comments = comments
 
 
-def get_posts(reddit: praw.Reddit, subreddit: str, n_comments: int):
+def get_posts(reddit: praw.Reddit, subreddit: str, n_comments: int, existing: list[str]):
 
     submissions: list[praw.models.reddit.submission.Submission] = list(
         reddit.subreddit(subreddit).top(time_filter='day', limit=None))
@@ -48,6 +48,9 @@ def get_posts(reddit: praw.Reddit, subreddit: str, n_comments: int):
 
     while post == None:
         submission = random.choice(submissions)
+
+        if submission.id in existing:
+            continue
 
         if submission.over_18:
             continue
@@ -66,6 +69,8 @@ def get_posts(reddit: praw.Reddit, subreddit: str, n_comments: int):
             continue
 
         post = submission
+        with open('reddit_generated_before.txt', 'a') as f:
+            f.write(submission.id + '\n')
 
     temp = get_details_from_post(post, n_comments)
 
@@ -120,14 +125,19 @@ def screenshot_comments(driver, post: Post):
             driver.execute_script(
                 "arguments[0].removeAttribute('collapsed');", comment)
 
-        main_comment = WebDriverWait(driver, 60).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, f'#t1_{c.id}-comment-rtjson-content')))
+        try:
+            main_comment = WebDriverWait(driver, 60).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, f'#t1_{c.id}-comment-rtjson-content')))
+        except:
+            main_comment = comment
 
         while True:
             actions = ActionChains(driver)
             actions.scroll_to_element(main_comment).perform()
             # Since the previous line only scrolls to the end of the comment body, we want to scroll 32px, which is the height of the upvote bar, to take a full screenshot of the comment
-            driver.execute_script("window.scrollBy(0, 32);")
+            if main_comment != comment:
+                driver.execute_script("window.scrollBy(0, 32);")
+
             time.sleep(1)
 
             if comment.is_displayed:
@@ -137,7 +147,7 @@ def screenshot_comments(driver, post: Post):
         shutil.move(f'{post.id}_{c.id}.png', f'./temp/{post.id}_{c.id}.png')
 
 
-def initialise_all(client_id, client_secret, subreddit, n_comments):
+def initialise_all(client_id, client_secret, subreddit, n_comments, existing):
     try:
         reddit = praw.Reddit(
             client_id=client_id,
@@ -147,7 +157,8 @@ def initialise_all(client_id, client_secret, subreddit, n_comments):
     except:
         print('An error occured while logging in, check that your credentials are right')
 
-    post = get_posts(reddit, subreddit=subreddit, n_comments=n_comments)
+    post = get_posts(reddit, subreddit=subreddit,
+                     n_comments=n_comments, existing=existing)
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
@@ -160,12 +171,12 @@ def initialise_all(client_id, client_secret, subreddit, n_comments):
 
 
 class RedditShort:
-    def __init__(self, client_id: str, client_secret: str, background: str, music: str, font: str, subreddit: str, n_comments: int, output: str, job_id: str, iteration: int):
+    def __init__(self, client_id: str, client_secret: str, background: str, music: str, font: str, subreddit: str, n_comments: int, existing: list[str], output: str, job_id: str, iteration: int):
         self.background = background
         self.music = music
         self.font = font
         self.post: Post = initialise_all(
-            client_id, client_secret, subreddit, n_comments)
+            client_id, client_secret, subreddit, n_comments, existing)
         self.output = output
         self.job_id = job_id
         self.iteration = iteration

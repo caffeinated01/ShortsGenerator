@@ -95,6 +95,17 @@ def generate_reddit(job_id):
     pw = getpass.getpass(
         prompt='> Reddit app Client Secret: ') if using_stored == False else env_pw
 
+    exclude_existing = input(
+        '> Do you want to skip posts that have already been generated before [y/n]: ')
+    match exclude_existing.lower():
+        case 'y':
+            with open('reddit_generated_before.txt', 'r') as f:
+                l = f.readlines()
+            existing = [i.strip() for i in l]
+            print(existing)
+        case '_':
+            existing = []
+
     n_videos = int(input('> How many videos: '))
     n_comments_per_video = int(input('> How many comments per video: '))
     subreddit = input('> What subreddit to find post from: r/')
@@ -108,7 +119,7 @@ def generate_reddit(job_id):
         for i in range(n_videos):
             clear_screen()
             short = RedditShort(user, pw, BACKGROUND_FILE_NAME, MUSIC_FILE_NAME, FONT_FILE_NAME,
-                                subreddit, n_comments_per_video, 'reddit_' + str(i+1), job_id, i+1)
+                                subreddit, n_comments_per_video, existing, 'reddit_' + str(i+1), job_id, i+1)
             short.start_thread()
 
             if short.running:
@@ -240,6 +251,11 @@ REDDIT_CLIENT_SECRET =
 IG_USERNAME = 
 IG_PASSWORD = 
 ''')
+        env.close()
+
+    if not os.path.isfile('reddit_generated_before.txt'):
+        f = open('reddit_generated_before.txt', 'w')
+        f.close()
 
     c = None
     while c == None:
