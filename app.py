@@ -203,14 +203,15 @@ def upload_to_ig(job_id):
                 print(f'{store_credentials} is not a valid choice!')
                 continue
 
+    # emojis = ['🤣', '😂', '😹', '🫵', '🙃', '🤔', '🤪', '👀']
     c = input(
         '> Enter a caption (skip for default) [You can add hashtags like #YourHashTag]: ')
-    caption = f'Follow @{user} for more {choice(emojis)} #reddit #redditstory #askreddit #showerthoughts #trivia #shorts #cool #story #reels #didyouknow #foryoupage #fyp' if c == '' else c
 
     dir = f'out/{job_id}'
 
     for f in os.listdir(dir):
         if f.endswith('.mp4'):
+            caption = f'Follow @{user} for more {choice(emojis)} #reddit #redditstory #askreddit #showerthoughts #trivia #shorts #cool #story #reels #reelsviral #didyouknow #foryoupage #fyp' if c == '' else c
             cl.clip_upload(path=f'out/{job_id}/{f}', caption=caption, thumbnail=f'out/{job_id}/{f[:-3]}png', extra_data={
                 'like_and_view_counts_disabled': 1
             })
@@ -272,7 +273,8 @@ IG_PASSWORD =
     choice_to_fn[c](job_id)
 
     while True:
-        upload_choice = input('> Upload to instagram [y/n]: ')
+        upload_choice = input(
+            '> Upload to instagram (Your account might be banned/suspended for automation) [y/n]: ')
         match upload_choice.lower():
             case 'y':
                 upload_to_ig(job_id)

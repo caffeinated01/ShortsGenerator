@@ -1,4 +1,5 @@
 import os
+import re
 import random
 import shutil
 import threading
@@ -58,6 +59,12 @@ def get_posts(reddit: praw.Reddit, subreddit: str, n_comments: int, existing: li
         c = 0
 
         for comment in submission.comments.list():
+            if len(comment.body.split()) == 1:
+                if bool(re.match('^(http|https)://', comment.body)):
+                    continue
+                if bool(re.match('!\[([^\]]+)\]\(([^)]+)\)', comment.body)):
+                    continue
+
             if comment.parent_id[0:2] == 't1':
                 continue
             c += 1
@@ -92,6 +99,12 @@ def get_details_from_post(post: praw.models.reddit.submission.Submission, n_comm
     for comment in post.comments.list():
         i += 1
 
+        if len(comment.body.split()) == 1:
+            if bool(re.match('^(http|https)://', comment.body)):
+                continue
+            if bool(re.match('!\[([^\]]+)\]\(([^)]+)\)', comment.body)):
+                continue
+
         if comment.parent_id[0:2] == 't1':
             continue
 
@@ -101,6 +114,18 @@ def get_details_from_post(post: praw.models.reddit.submission.Submission, n_comm
         comments.append(Comment(i, comment.body, comment.id))
 
     comments = comments[:n_comments]
+
+    for i in range(len(comments)):
+        comment = comments[i]
+        c = comments[i].body.split()
+
+        for word in c:
+            if bool(re.match('^(http|https)://', word)):
+                c.remove(word)
+            if bool(re.match('!\[([^\]]+)\]\(([^)]+)\)', word)):
+                c.remove(word)
+
+        comments[i] = Comment(comment.idx, ' '.join(c), comment.id)
 
     return Post(id, link, title, body, comments)
 
