@@ -40,7 +40,7 @@ class Post:
         self.comments = comments
 
 
-def get_posts(reddit: praw.Reddit, subreddit: str, n_comments: int, existing: list[str]):
+def get_posts(reddit: praw.Reddit, subreddit: str, n_comments: int, existing: bool):
 
     submissions: list[praw.models.reddit.submission.Submission] = list(
         reddit.subreddit(subreddit).top(time_filter='day', limit=None))
@@ -50,11 +50,18 @@ def get_posts(reddit: praw.Reddit, subreddit: str, n_comments: int, existing: li
     while post == None:
         submission = random.choice(submissions)
 
-        if submission.id in existing:
-            continue
+        if existing:
+            with open('reddit_generated_before.txt', 'r') as f:
+                l = f.readlines()
+                e = [i.strip() for i in l]
+
+            if submission.id in e:
+                continue
 
         if submission.over_18:
             continue
+
+        submission.comments.replace_more(limit=None)
 
         c = 0
 
@@ -62,7 +69,7 @@ def get_posts(reddit: praw.Reddit, subreddit: str, n_comments: int, existing: li
             if len(comment.body.split()) == 1:
                 if bool(re.match('^(http|https)://', comment.body)):
                     continue
-                if bool(re.match('!\[([^\]]+)\]\(([^)]+)\)', comment.body)):
+                if bool(re.match('!\[([^\]]+)\]\(([^)]+)\)', comment.body)) or bool(re.match('\[([^\]]+)\]\(([^)]+)\)', comment.body)):
                     continue
 
             if comment.parent_id[0:2] == 't1':
@@ -99,9 +106,10 @@ def get_details_from_post(post: praw.models.reddit.submission.Submission, n_comm
     for comment in post.comments.list():
         i += 1
 
+        if bool(re.match('^(http|https)://', comment.body)):
+            continue
+
         if len(comment.body.split()) == 1:
-            if bool(re.match('^(http|https)://', comment.body)):
-                continue
             if bool(re.match('!\[([^\]]+)\]\(([^)]+)\)', comment.body)):
                 continue
 
@@ -122,7 +130,7 @@ def get_details_from_post(post: praw.models.reddit.submission.Submission, n_comm
         for word in c:
             if bool(re.match('^(http|https)://', word)):
                 c.remove(word)
-            if bool(re.match('!\[([^\]]+)\]\(([^)]+)\)', word)):
+            if bool(re.match('!\[([^\]]+)\]\(([^)]+)\)', word)) or bool(re.match('\[([^\]]+)\]\(([^)]+)\)', word)):
                 c.remove(word)
 
         comments[i] = Comment(comment.idx, ' '.join(c), comment.id)
@@ -196,7 +204,7 @@ def initialise_all(client_id, client_secret, subreddit, n_comments, existing):
 
 
 class RedditShort:
-    def __init__(self, client_id: str, client_secret: str, background: str, music: str, font: str, subreddit: str, n_comments: int, existing: list[str], output: str, job_id: str, iteration: int):
+    def __init__(self, client_id: str, client_secret: str, background: str, music: str, font: str, subreddit: str, n_comments: int, existing: bool, output: str, job_id: str, iteration: int):
         self.background = background
         self.music = music
         self.font = font

@@ -97,13 +97,12 @@ def generate_reddit(job_id):
 
     exclude_existing = input(
         '> Do you want to skip posts that have already been generated before [y/n]: ')
+    
     match exclude_existing.lower():
         case 'y':
-            with open('reddit_generated_before.txt', 'r') as f:
-                l = f.readlines()
-            existing = [i.strip() for i in l]
+            existing = True
         case '_':
-            existing = []
+            existing = False
 
     n_videos = int(input('> How many videos: '))
     n_comments_per_video = int(input('> How many comments per video: '))
