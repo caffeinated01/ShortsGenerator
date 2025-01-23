@@ -1,3 +1,8 @@
+# NOTE:
+MoviePy v2.0 have introduced breaking changes, causing this project to work anymore\
+Due to the lack of time, I am not able to refactor the code\
+This repo will be put in public archive status
+
 # What ❓
 
 An automation tool to generate shorts (youtube shorts/tiktok/instagram reels)
